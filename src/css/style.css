@@ -1,0 +1,104 @@
+body {
+    color: rgb(7, 2, 37);
+    background-color: rgb(40, 153, 206);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.cards-container {
+    display: flex;
+    align-items: flex-start;
+    width: 1200px;
+}
+
+.cards-col {
+    width: 400px;
+    margin: 0 8px 0 0;
+    padding: 10px 8px;
+    background-color: rgb(219, 217, 217);
+}
+
+p {
+    margin: 0;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.cards {
+    min-height: 30px;
+    margin-bottom: 8px;
+}
+
+.add-card {
+    padding: 8px;
+    padding-left: 0;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.card {
+    position: relative;
+    min-height: 50px;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.new-card-form {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.add-btn {
+    font-weight: 700;
+    background-color: rgb(43, 238, 108);
+    color: #fff;
+    padding: 8px;
+    margin-top: 8px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    display: inline-block;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    font-size: larger;
+    text-align: center;
+    background-color: rgb(219, 217, 217);
+    cursor: pointer;
+}
+
+.cancel-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background-color: rgb(219, 217, 217);
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.dragged {
+    position: absolute;
+    z-index: 999;
+    pointer-events: none;
+}
