@@ -10,7 +10,6 @@ export default class CardsWidget {
     this.posX = null;
     this.cardsBox = document.querySelector('.cards-container');
     this.forms = document.querySelectorAll('.new-card-form');
-    this.state = [];
     this.toDo = document.getElementById('todo').querySelector('.cards');
     this.inProgress = document.getElementById('in-progress').querySelector('.cards');
     this.done = document.getElementById('done').querySelector('.cards');
@@ -20,6 +19,7 @@ export default class CardsWidget {
     document.addEventListener('DOMContentLoaded', () => {
       this.load();
     });
+    window.addEventListener('beforeunload', this.save);
     // to show a new card window
     this.addBox = document.querySelectorAll('.add-card');
     this.addBox.forEach((item) => item.addEventListener('click', (event) => {
@@ -91,7 +91,6 @@ export default class CardsWidget {
 
     // dnd listeners
     this.cardsBox.addEventListener('mousedown', (event) => {
-      // event.preventDefault();
       const targetCard = event.target;
       if (targetCard.closest('.card')) {
         this.dragStart(event);
@@ -106,22 +105,22 @@ export default class CardsWidget {
     });
     this.cardsBox.addEventListener('mouseup', (event) => {
       this.dragEnd(event);
-      this.save();
     });
-    this.cardsBox.addEventListener('mouseleave', this.dragEnd);
+    this.cardsBox.addEventListener('mouseleave', this.dragLeave);
   }
 
   load() {
     const data = JSON.parse(CardsStorage.load());
+    // console.log(data);
     if (data) {
       data.todo.forEach((item) => {
-        this.newCard(this.toDoCards(), item);
+        this.newCard(this.toDo, item);
       });
       data.inProgress.forEach((item) => {
-        this.newCard(this.inProgressCards(), item);
+        this.newCard(this.inProgress, item);
       });
       data.done.forEach((item) => {
-        this.newCard(this.doneCards(), item);
+        this.newCard(this.done, item);
       });
     }
   }
@@ -133,16 +132,19 @@ export default class CardsWidget {
       done: [],
     };
     const toDoCards = this.toDo.querySelectorAll('.card');
+    // console.log(toDoCards);
     const inProgressCards = this.inProgress.querySelectorAll('.card');
+    // console.log(inProgressCards);
     const doneCards = this.done.querySelectorAll('.card');
+    // console.log(doneCards);
     toDoCards.forEach((item) => {
-      data.todo.push(item.textContent);
+      data.todo.push(item.textContent.replace('×', ''));
     });
     inProgressCards.forEach((item) => {
-      data.inProgress.push(item.textContent);
+      data.inProgress.push(item.textContent.replace('×', ''));
     });
     doneCards.forEach((item) => {
-      data.done.push(item.textContent);
+      data.done.push(item.textContent.replace('×', ''));
     });
     CardsStorage.save(data);
   }
@@ -166,25 +168,24 @@ export default class CardsWidget {
   }
 
   dragStart(event) {
-    document.body.style.cursor = 'grabbing';
     const targetCard = event.target.closest('.card');
-    if (!targetCard) {
+    if (!targetCard || event.target.classList.contains('delete-btn')) {
       return;
     }
+    event.preventDefault();
+    document.body.style.cursor = 'grabbing';
     this.draggedEl = targetCard;
     this.ghostEl = this.draggedEl.cloneNode(true);
+    const { top, left } = this.draggedEl.getBoundingClientRect();
+    this.posX = event.clientX - left;
+    this.posY = event.clientY - top;
+    this.ghostEl.style.width = `${this.draggedEl.offsetWidth}px`;
     this.ghostEl.classList.add('dragged');
-    const {
-      width, height, top, left,
-    } = this.draggedEl.getBoundingClientRect();
-    this.posX = event.pageX - left;
-    this.posY = event.pageY - top;
-    document.body.appendChild(this.ghostEl);
     this.draggedEl.classList.add('hidden');
-    this.ghostEl.style.width = `${width}px`;
-    this.ghostEl.style.height = `${height}px`;
-    this.ghostEl.style.top = `${top}`;
-    this.ghostEl.style.left = `${left}`;
+    document.body.appendChild(this.ghostEl);
+    this.ghostEl.style.height = `${this.draggedEl.offsetHeight}px`;
+    this.ghostEl.style.top = `${event.pageY - this.posY}px`;
+    this.ghostEl.style.left = `${event.pageX - this.posX}px`;
   }
 
   dragMove(event) {
@@ -199,25 +200,9 @@ export default class CardsWidget {
 
   dragEnd(event) {
     event.preventDefault();
-    if (!this.draggedEl || !this.ghostEl) {
+    if (!this.draggedEl) {
       return;
     }
-    // const column = document.elementFromPoint(event.clientX, event.clientY).closest('.cards');
-    // let closest = document.elementFromPoint(event.clientX, event.clientY);
-    // console.log(closest);
-    // console.log(column);
-    // if (!column) {
-    //   this.ghostEl.remove();
-    //   return;
-    // }
-    // if (!closest.closest('.card')) {
-    //   closest = column;
-    //   column.appendChild(this.ghostEl);
-    // } else {
-    //   column.insertBefore(this.ghostEl, closest.nextElementSibling);
-    // }
-    // this.dragLeave();
-    // this.save();
     const targetPos = document.elementFromPoint(event.clientX, event.clientY);
     const targetBox = targetPos.closest('.cards');
     const { top } = targetPos.getBoundingClientRect();
@@ -227,23 +212,26 @@ export default class CardsWidget {
       } else {
         targetBox.insertBefore(this.draggedEl, targetPos);
       }
-      this.dragLeave();
-      this.save();
     } else if (targetBox) {
-      targetBox.appendChild(this.draggedEl);
-      this.dragLeave();
-      this.save();
-    } else {
-      this.dragLeave();
-      this.save();
-    }
+      targetBox.append(this.draggedEl);
+    } 
+    // else {
+    //   this.dragLeave();
+    //   this.save();
+    // }
+    document.body.style.cursor = 'auto';
+    this.ghostEl.remove();
+    this.draggedEl.classList.remove('hidden');
+    this.draggedEl = null;
+    this.ghostEl = null;
+    this.save();
   }
 
   dragLeave() {
+    console.log(this.ghostEl);
+    this.ghostEl.remove();
     document.body.style.cursor = 'auto';
     this.draggedEl.classList.remove('hidden');
-    this.ghostEl.classList.remove('dragged');
-    this.ghostEl.remove();
     this.draggedEl = null;
     this.ghostEl = null;
   }

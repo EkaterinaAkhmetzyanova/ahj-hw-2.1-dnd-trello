@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 export default class CardsStorage {
   static save(data) {
     localStorage.setItem('cards', JSON.stringify(data));
