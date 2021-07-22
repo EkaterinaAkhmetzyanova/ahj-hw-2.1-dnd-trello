@@ -214,8 +214,7 @@ export default class CardsWidget {
       }
     } else if (targetBox) {
       targetBox.append(this.draggedEl);
-    } 
-    // else {
+    } // else {
     //   this.dragLeave();
     //   this.save();
     // }
